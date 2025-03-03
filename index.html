@@ -19,11 +19,9 @@
       margin: 0 auto;
       background-color: #eef;
     }
-    /* The canvas shows the grid (and, optionally, the population) */
     #grid {
       display: block;
     }
-    /* The quadrat overlay (draggable sampling window) */
     #quadrat {
       position: absolute;
       width: 100px;
@@ -54,6 +52,8 @@
 </head>
 <body>
   <h1>Quadrat Sampling Simulation</h1>
+  <p>To estimate the total population, use the formula:</p>
+  <p><strong>Estimated Population = (Average Count) × (Total Area / Quadrat Area)</strong></p>
   <div id="container">
     <canvas id="grid" width="600" height="600"></canvas>
     <div id="quadrat"></div>
@@ -67,11 +67,10 @@
     <p>Latest Sample Count: <span id="sampleCount">0</span></p>
     <p>All Samples: <span id="samplesList"></span></p>
     <p>Average Count: <span id="avgCount">0</span></p>
-    <p>Estimated Total Population: <span id="estPop">0</span></p>
+    <p>Enter your estimated population: <input type="number" id="userEstimate"> <button id="checkEstimate">Check Your Answer</button></p>
+    <p id="feedback"></p>
   </div>
-
   <script>
-    // Get references to elements
     const canvas = document.getElementById("grid");
     const ctx = canvas.getContext("2d");
     const quadrat = document.getElementById("quadrat");
@@ -81,20 +80,20 @@
     const sampleCountSpan = document.getElementById("sampleCount");
     const samplesListSpan = document.getElementById("samplesList");
     const avgCountSpan = document.getElementById("avgCount");
-    const estPopSpan = document.getElementById("estPop");
+    const userEstimateInput = document.getElementById("userEstimate");
+    const checkEstimateBtn = document.getElementById("checkEstimate");
+    const feedback = document.getElementById("feedback");
 
-    // Dimensions and population settings
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
     const quadratWidth = quadrat.offsetWidth;
     const quadratHeight = quadrat.offsetHeight;
-    const truePopulationSize = 200; // hidden true population number
+    const truePopulationSize = 200;
 
     let populationPoints = [];
     let samples = [];
-    let revealPopulation = false;  // population is hidden by default
+    let revealPopulation = false;
 
-    // Generate random population points within the canvas
     function generatePopulation() {
       populationPoints = [];
       for (let i = 0; i < truePopulationSize; i++) {
@@ -104,12 +103,8 @@
       }
     }
 
-    // Draw the grid and, if enabled, the population points
     function drawGrid() {
-      // Clear canvas
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      
-      // Optionally draw population points (blue circles)
       if (revealPopulation) {
         ctx.fillStyle = "blue";
         populationPoints.forEach(p => {
@@ -118,8 +113,6 @@
           ctx.fill();
         });
       }
-      
-      // Draw grid lines (every 50px)
       ctx.strokeStyle = "#ccc";
       for (let x = 0; x <= canvasWidth; x += 50) {
         ctx.beginPath();
@@ -135,84 +128,50 @@
       }
     }
 
-    // Update the results display with the latest sample data
     function updateResults() {
       let sum = samples.reduce((a, b) => a + b, 0);
       let avg = samples.length ? sum / samples.length : 0;
-      // Estimated population using: (average count) * (total area / quadrat area)
-      let estimatedPopulation = avg * (canvasWidth * canvasHeight) / (quadratWidth * quadratHeight);
-      
       sampleCountSpan.textContent = samples[samples.length - 1] || 0;
       samplesListSpan.textContent = samples.join(", ");
       avgCountSpan.textContent = avg.toFixed(2);
-      estPopSpan.textContent = Math.round(estimatedPopulation);
     }
 
-    // When the "Take Sample" button is clicked, count individuals in the quadrat
     sampleBtn.addEventListener("click", function() {
-      // Get quadrat's position relative to the container
       let rect = quadrat.getBoundingClientRect();
       let containerRect = document.getElementById("container").getBoundingClientRect();
       let qLeft = rect.left - containerRect.left;
       let qTop = rect.top - containerRect.top;
-
-      // Count the population points inside the quadrat boundaries
       let count = populationPoints.filter(p =>
         p.x >= qLeft && p.x <= qLeft + quadratWidth &&
         p.y >= qTop && p.y <= qTop + quadratHeight
       ).length;
-
       samples.push(count);
       updateResults();
     });
 
-    // Reset simulation: regenerate population, clear samples, hide population points
     resetBtn.addEventListener("click", function() {
       generatePopulation();
       samples = [];
       revealPopulation = false;
       revealBtn.textContent = "Reveal Population";
+      feedback.textContent = "";
       updateResults();
       drawGrid();
     });
 
-    // Toggle population reveal (for instructor discussion)
     revealBtn.addEventListener("click", function() {
       revealPopulation = !revealPopulation;
       revealBtn.textContent = revealPopulation ? "Hide Population" : "Reveal Population";
       drawGrid();
     });
 
-    // Draggable quadrat functionality
-    let isDragging = false;
-    let dragOffsetX = 0;
-    let dragOffsetY = 0;
-
-    quadrat.addEventListener("mousedown", function(e) {
-      isDragging = true;
-      let rect = quadrat.getBoundingClientRect();
-      dragOffsetX = e.clientX - rect.left;
-      dragOffsetY = e.clientY - rect.top;
+    checkEstimateBtn.addEventListener("click", function() {
+      let avg = samples.reduce((a, b) => a + b, 0) / samples.length || 0;
+      let correctEstimate = avg * (canvasWidth * canvasHeight) / (quadratWidth * quadratHeight);
+      let userEstimate = parseFloat(userEstimateInput.value);
+      feedback.textContent = userEstimate === Math.round(correctEstimate) ? "Correct!" : "Try again.";
     });
 
-    document.addEventListener("mousemove", function(e) {
-      if (isDragging) {
-        let containerRect = document.getElementById("container").getBoundingClientRect();
-        let newLeft = e.clientX - containerRect.left - dragOffsetX;
-        let newTop = e.clientY - containerRect.top - dragOffsetY;
-        // Constrain within the container boundaries
-        newLeft = Math.max(0, Math.min(newLeft, canvasWidth - quadratWidth));
-        newTop = Math.max(0, Math.min(newTop, canvasHeight - quadratHeight));
-        quadrat.style.left = newLeft + "px";
-        quadrat.style.top = newTop + "px";
-      }
-    });
-
-    document.addEventListener("mouseup", function() {
-      isDragging = false;
-    });
-
-    // Initialize the simulation when the page loads
     generatePopulation();
     drawGrid();
   </script>
