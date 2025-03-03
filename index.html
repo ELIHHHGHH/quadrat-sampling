@@ -54,25 +54,33 @@
   <h1>Quadrat Sampling Simulation</h1>
   <p>To estimate the total population, use the formula:</p>
   <p><strong>Estimated Population = (Average Count) × (Total Area / Quadrat Area)</strong></p>
+
   <div id="container">
     <canvas id="grid" width="600" height="600"></canvas>
     <div id="quadrat"></div>
   </div>
+
   <div id="controls">
     <button id="sampleBtn">Take Sample</button>
     <button id="resetBtn">Reset Simulation</button>
     <button id="revealBtn">Reveal Population</button>
   </div>
+
   <div id="results">
     <p>Latest Sample Count: <span id="sampleCount">0</span></p>
     <p>All Samples: <span id="samplesList"></span></p>
     <p>Average Count: <span id="avgCount">0</span></p>
-    <p>Enter your estimated population: <input type="number" id="userEstimate"> <button id="checkEstimate">Check Your Answer</button></p>
+    <p>Enter your estimated population: 
+      <input type="number" id="userEstimate"> 
+      <button id="checkEstimate">Check Your Answer</button>
+    </p>
     <p id="feedback"></p>
   </div>
+
   <script>
     const canvas = document.getElementById("grid");
     const ctx = canvas.getContext("2d");
+    const container = document.getElementById("container");
     const quadrat = document.getElementById("quadrat");
     const sampleBtn = document.getElementById("sampleBtn");
     const resetBtn = document.getElementById("resetBtn");
@@ -94,6 +102,7 @@
     let samples = [];
     let revealPopulation = false;
 
+    // Generate a random population of points
     function generatePopulation() {
       populationPoints = [];
       for (let i = 0; i < truePopulationSize; i++) {
@@ -103,8 +112,37 @@
       }
     }
 
+    // Draw grid lines on the canvas
+    function drawBackgroundGrid() {
+      // Choose a spacing value for grid lines (e.g., 50px)
+      const spacing = 50;
+      ctx.strokeStyle = "#ccc";
+      ctx.lineWidth = 1;
+
+      // Vertical lines
+      for (let x = 0; x <= canvasWidth; x += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeight);
+        ctx.stroke();
+      }
+      // Horizontal lines
+      for (let y = 0; y <= canvasHeight; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvasWidth, y);
+        ctx.stroke();
+      }
+    }
+
     function drawGrid() {
+      // Clear the canvas first
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // Draw the background grid
+      drawBackgroundGrid();
+
+      // If population is revealed, draw each population point
       if (revealPopulation) {
         ctx.fillStyle = "blue";
         populationPoints.forEach(p => {
@@ -115,27 +153,37 @@
       }
     }
 
-    function updateResults() {
-      let sum = samples.reduce((a, b) => a + b, 0);
-      let avg = samples.length ? sum / samples.length : 0;
-      sampleCountSpan.textContent = samples[samples.length - 1] || 0;
-      samplesListSpan.textContent = samples.join(", ");
-      avgCountSpan.textContent = avg.toFixed(2);
-    }
+    // When container is clicked, move the quadrat center to the click position
+    container.addEventListener("click", function(event) {
+      // Ignore clicks that come from the "Take Sample", "Reset", etc. buttons
+      // by making sure the click is inside the canvas area:
+      const targetId = event.target.id;
+      if (
+        targetId === "sampleBtn" ||
+        targetId === "resetBtn" ||
+        targetId === "revealBtn" ||
+        targetId === "userEstimate" ||
+        targetId === "checkEstimate"
+      ) {
+        return;
+      }
 
-    quadrat.addEventListener("click", function(event) {
-      let containerRect = document.getElementById("container").getBoundingClientRect();
+      let containerRect = container.getBoundingClientRect();
       let newLeft = event.clientX - containerRect.left - quadratWidth / 2;
       let newTop = event.clientY - containerRect.top - quadratHeight / 2;
+
+      // Clamp the quadrat so it can't go outside the boundaries
       newLeft = Math.max(0, Math.min(newLeft, canvasWidth - quadratWidth));
       newTop = Math.max(0, Math.min(newTop, canvasHeight - quadratHeight));
+
       quadrat.style.left = newLeft + "px";
       quadrat.style.top = newTop + "px";
     });
 
+    // Take a sample based on the current quadrat position
     sampleBtn.addEventListener("click", function() {
       let rect = quadrat.getBoundingClientRect();
-      let containerRect = document.getElementById("container").getBoundingClientRect();
+      let containerRect = container.getBoundingClientRect();
       let qLeft = rect.left - containerRect.left;
       let qTop = rect.top - containerRect.top;
       let count = populationPoints.filter(p =>
@@ -146,6 +194,7 @@
       updateResults();
     });
 
+    // Reset the simulation
     resetBtn.addEventListener("click", function() {
       generatePopulation();
       samples = [];
@@ -156,12 +205,23 @@
       drawGrid();
     });
 
+    // Reveal or hide population
     revealBtn.addEventListener("click", function() {
       revealPopulation = !revealPopulation;
       revealBtn.textContent = revealPopulation ? "Hide Population" : "Reveal Population";
       drawGrid();
     });
 
+    // Update sample results on the page
+    function updateResults() {
+      let sum = samples.reduce((a, b) => a + b, 0);
+      let avg = samples.length ? sum / samples.length : 0;
+      sampleCountSpan.textContent = samples[samples.length - 1] || 0;
+      samplesListSpan.textContent = samples.join(", ");
+      avgCountSpan.textContent = avg.toFixed(2);
+    }
+
+    // Initial setup
     generatePopulation();
     drawGrid();
   </script>
