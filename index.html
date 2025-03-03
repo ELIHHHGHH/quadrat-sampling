@@ -70,9 +70,11 @@
     <p>Latest Sample Count: <span id="sampleCount">0</span></p>
     <p>All Samples: <span id="samplesList"></span></p>
     <p>Average Count: <span id="avgCount">0</span></p>
-    <p>Enter your estimated population: 
-      <input type="number" id="userEstimate"> 
+    <p>
+      Enter your estimated population:
+      <input type="number" id="userEstimate">
       <button id="checkEstimate">Check Your Answer</button>
+      <button id="revealAnswerBtn">Reveal Answer</button>
     </p>
     <p id="feedback"></p>
   </div>
@@ -90,12 +92,14 @@
     const avgCountSpan = document.getElementById("avgCount");
     const userEstimateInput = document.getElementById("userEstimate");
     const checkEstimateBtn = document.getElementById("checkEstimate");
+    const revealAnswerBtn = document.getElementById("revealAnswerBtn");
     const feedback = document.getElementById("feedback");
 
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
     const quadratWidth = quadrat.offsetWidth;
     const quadratHeight = quadrat.offsetHeight;
+    // The true population size; used for "Check Answer" and "Reveal Answer"
     const truePopulationSize = 200;
 
     let populationPoints = [];
@@ -155,15 +159,15 @@
 
     // When container is clicked, move the quadrat center to the click position
     container.addEventListener("click", function(event) {
-      // Ignore clicks that come from the "Take Sample", "Reset", etc. buttons
-      // by making sure the click is inside the canvas area:
+      // Ignore clicks on buttons/inputs
       const targetId = event.target.id;
       if (
         targetId === "sampleBtn" ||
         targetId === "resetBtn" ||
         targetId === "revealBtn" ||
         targetId === "userEstimate" ||
-        targetId === "checkEstimate"
+        targetId === "checkEstimate" ||
+        targetId === "revealAnswerBtn"
       ) {
         return;
       }
@@ -220,6 +224,26 @@
       samplesListSpan.textContent = samples.join(", ");
       avgCountSpan.textContent = avg.toFixed(2);
     }
+
+    // Compare the user's estimate with the true population
+    checkEstimateBtn.addEventListener("click", function() {
+      const userValue = parseInt(userEstimateInput.value);
+
+      if (isNaN(userValue)) {
+        feedback.textContent = "Please enter a valid number.";
+      } else if (userValue < truePopulationSize) {
+        feedback.textContent = "Your estimate is too low.";
+      } else if (userValue > truePopulationSize) {
+        feedback.textContent = "Your estimate is too high.";
+      } else {
+        feedback.textContent = "Exactly right! Great job!";
+      }
+    });
+
+    // Reveal the actual answer
+    revealAnswerBtn.addEventListener("click", function() {
+      feedback.textContent = `The actual population is ${truePopulationSize}.`;
+    });
 
     // Initial setup
     generatePopulation();
