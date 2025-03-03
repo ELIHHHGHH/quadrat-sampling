@@ -30,7 +30,7 @@
       background-color: rgba(255, 0, 0, 0.2);
       top: 250px;
       left: 250px;
-      cursor: move;
+      cursor: pointer;
     }
     #controls {
       text-align: center;
@@ -113,19 +113,6 @@
           ctx.fill();
         });
       }
-      ctx.strokeStyle = "#ccc";
-      for (let x = 0; x <= canvasWidth; x += 50) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvasHeight);
-        ctx.stroke();
-      }
-      for (let y = 0; y <= canvasHeight; y += 50) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvasWidth, y);
-        ctx.stroke();
-      }
     }
 
     function updateResults() {
@@ -135,6 +122,16 @@
       samplesListSpan.textContent = samples.join(", ");
       avgCountSpan.textContent = avg.toFixed(2);
     }
+
+    quadrat.addEventListener("click", function(event) {
+      let containerRect = document.getElementById("container").getBoundingClientRect();
+      let newLeft = event.clientX - containerRect.left - quadratWidth / 2;
+      let newTop = event.clientY - containerRect.top - quadratHeight / 2;
+      newLeft = Math.max(0, Math.min(newLeft, canvasWidth - quadratWidth));
+      newTop = Math.max(0, Math.min(newTop, canvasHeight - quadratHeight));
+      quadrat.style.left = newLeft + "px";
+      quadrat.style.top = newTop + "px";
+    });
 
     sampleBtn.addEventListener("click", function() {
       let rect = quadrat.getBoundingClientRect();
@@ -163,13 +160,6 @@
       revealPopulation = !revealPopulation;
       revealBtn.textContent = revealPopulation ? "Hide Population" : "Reveal Population";
       drawGrid();
-    });
-
-    checkEstimateBtn.addEventListener("click", function() {
-      let avg = samples.reduce((a, b) => a + b, 0) / samples.length || 0;
-      let correctEstimate = avg * (canvasWidth * canvasHeight) / (quadratWidth * quadratHeight);
-      let userEstimate = parseFloat(userEstimateInput.value);
-      feedback.textContent = userEstimate === Math.round(correctEstimate) ? "Correct!" : "Try again.";
     });
 
     generatePopulation();
