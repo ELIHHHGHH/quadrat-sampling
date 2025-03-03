@@ -60,6 +60,12 @@
 </head>
 <body>
   <h1>Quadrat Sampling Simulation</h1>
+
+  <!-- Brief Explanation -->
+  <p style="text-align:center; max-width: 600px; margin: 0 auto;">
+    <strong>How it works:</strong> Click anywhere inside the box below to move the red quadrat (sample area). Then click <em>Take Sample</em> to see how many points fall inside that quadrat. Collect multiple samples to get an average count, and use that to estimate the total population. You can reveal the actual distribution of points (blue) with <em>Reveal Population</em>. Finally, compare your estimate with the true population size.
+  </p>
+
   <p style="text-align:center;">
     To estimate the total population, use the formula:
     <br>
@@ -208,9 +214,8 @@
       updateResults();
     });
 
-    // Reset simulation
+    // Reset simulation (reloads the page to randomize population size)
     resetBtn.addEventListener("click", function() {
-      // Re-randomize population size
       location.reload();
     });
 
